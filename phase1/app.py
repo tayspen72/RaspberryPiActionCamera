@@ -56,11 +56,11 @@ class ActionCam:
             match self.CurrentMode:
                 case Mode.EVENT:
                     self.IsActive = True
-                    self.camera.start_passive()
+                    self.camera.start_event_capture()
                     self._set_state(State.WAITING_FOR_EVENT)
                 case Mode.RECORD:
                     self.IsActive = True
-                    self.camera.start_active()
+                    self.camera.start_recording()
                     self._set_state(State.RECORDING)
                 case Mode.STANDBY:
                     self._set_state(State.NONE)
@@ -81,7 +81,7 @@ class ActionCam:
                     else:
                         print("Resuming active recording")
                         self.IsActive = True
-                        self.camera.start_active()
+                        self.camera.start_recording()
                         self._set_state(State.RECORDING)
                 case Mode.STANDBY:
                     print("Press has no effect in standby mode")
