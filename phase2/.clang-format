@@ -1,0 +1,48 @@
+# Run manually to reformat a file:
+# clang-format -i --style=file <file>
+Language:        Cpp
+BasedOnStyle:  Google
+
+# Use tabs instead of spaces for indentation
+UseTab:          Always
+
+# Tab width (equivalent to 4 spaces visually)
+TabWidth:        4
+
+# No line wrapping - never break long lines
+ColumnLimit:     0
+
+# Ensure consistent tab usage
+IndentWidth:     4
+ContinuationIndentWidth: 4
+
+# Brace style - Custom configuration for proper array formatting
+BreakBeforeBraces: Custom
+BraceWrapping:
+  AfterCaseLabel: true
+  AfterClass: true
+  AfterControlStatement: false
+  AfterEnum: true
+  AfterFunction: false
+  AfterNamespace: true
+  AfterStruct: true
+  AfterUnion: true
+  AfterExternBlock: true
+  BeforeCatch: true
+  BeforeElse: true
+  BeforeLambdaBody: true
+  BeforeWhile: false
+  IndentBraces: false
+  SplitEmptyFunction: false
+  SplitEmptyRecord: false
+  SplitEmptyNamespace: false
+
+# Array initializer formatting - force closing brace on new line
+Cpp11BracedListStyle: false
+AllowShortFunctionsOnASingleLine: Empty
+AllowShortIfStatementsOnASingleLine: false
+AllowShortLoopsOnASingleLine: false
+
+# Class access specifier and member indentation
+AccessModifierOffset: 4
+IndentAccessModifiers: true

@@ -98,6 +98,34 @@ This project implements identical functionality in three languages to explore th
 
 ## Getting Started
 
+### Prerequisites
+
+```bash
+# Add user to GPIO group (required for hardware access)
+sudo usermod -a -G gpio $USER
+# Log out and back in for group changes to take effect
+```
+
+### Installation & Usage
+
+#### Phase 1: Python Implementation
+
+```bash
+cd phase1
+pip3 install -r requirements.txt
+python3 app.py
+```
+
+#### Phase 2: C++ Implementation
+
+```bash
+cd phase2
+cmake -B build
+cd build
+make
+./bin/action_camera
+```
+
 ## Development Roadmap
 
 ### Planned Enhancements
@@ -108,3 +136,29 @@ This project implements identical functionality in three languages to explore th
 - **Web Configuration:** WiFi hotspot + responsive web UI for settings
 - **GPS Logging:** Serial GPS module integration with video metadata
 - **Power Optimization:** Deep sleep modes, wake-on-interrupt, power profiling
+
+## Technical References
+
+**Libraries & Frameworks:**
+- [libgpiod](https://github.com/brgl/libgpiod) — Modern Linux GPIO interface
+- [picamera2](https://github.com/raspberrypi/picamera2) — Official Raspberry Pi camera library (Python)
+- [rpicam-apps](https://github.com/raspberrypi/rpicam-apps) — Raspberry Pi camera reference implementations (C++)
+- [embedded-hal](https://github.com/rust-embedded/embedded-hal) — Rust hardware abstraction layer
+
+**Learning Resources:**
+- Raspberry Pi documentation for camera and GPIO subsystems
+- Linux kernel documentation for V4L2 (Video4Linux2) API
+- Embedded Rust book for microcontroller programming patterns
+
+## License
+
+This project is licensed under the MIT License - see LICENSE file for details.
+
+## Acknowledgments
+
+Built with inspiration from the maker community and professional embedded systems practices. Special thanks to the Raspberry Pi Foundation for excellent hardware documentation and the open-source embedded communities for Python, C++, and Rust.
+
+---
+
+**Project Type:** Embedded Systems | Computer Vision | Comparative Language Study  
+**Skills Demonstrated:** Linux system programming, hardware interfacing, state machine design, cross-language development, embedded optimization
