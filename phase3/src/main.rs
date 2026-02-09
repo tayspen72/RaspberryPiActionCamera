@@ -1,3 +1,4 @@
+mod app;
 mod button;
 mod camera;
 mod display;
@@ -8,9 +9,10 @@ fn main() {
     println!("Press button for action, hold to cycle modes. Ctrl-C to exit.");
 
     let button = button::Button::new(1250).expect("Failed to create the button");
+    let camera = camera::Camera::new(".").expect("Failed to create the camera API");
     let display = display::Display::new().expect("Failed to create the display");
 
-    let mut camera = camera::Camera::new(button, display).expect("Failed to create the camera");
+    let mut app = app::ActionCamera::new(button, camera, display).expect("Failed to create the camera");
 
-    camera.run().expect("Failed to run");
+    app.run().expect("Failed to run");
 }

@@ -1,174 +1,93 @@
-use crate::button;
-use crate::display::Display;
-
-use button::{Button, ButtonEvent};
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum Mode {
-    Event,
-    Record,
-    Standby,
-}
-
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum State {
-    WaitingForEvent,
-    SavingEvent,
-    Recording,
-    Stopped,
-    None,
-}
+use chrono;
+use std::fs;
+use std::path::{Path, PathBuf};
+use std::process::{Child, Command, Stdio};
 
 pub struct Camera {
-    button: Button,
-    display: Display,
-    current_mode: Mode,
-    target_mode: Mode,
-    state: State,
+    process: Option<Child>,
+    events_path: PathBuf,
+    videos_path: PathBuf,
 }
 
 impl Camera {
-    pub fn new(button: Button, display: Display) -> std::io::Result<Self> {
-        let mut camera = Camera {
-            button,
-            display,
-            current_mode: Mode::Standby,
-            target_mode: Mode::Standby,
-            state: State::None,
-        };
+    pub fn new<P: AsRef<Path>>(output_path: P) -> std::io::Result<Self> {
+        let output_path = output_path.as_ref().to_path_buf();
+        let events_path = output_path.join("events");
+        let videos_path = output_path.join("videos");
 
-        camera.display.write_mode(camera.current_mode);
-        camera.display.write_state(camera.state);
+        fs::create_dir_all(&events_path).expect("Failed to create events directory");
+        fs::create_dir_all(&videos_path).expect("Failed to create videos directory");
 
-        Ok(camera)
+        Ok(Camera {
+            process: None,
+            events_path: events_path,
+            videos_path: videos_path,
+        })
     }
 
-    pub fn get_next_mode(mode: Mode) -> Mode {
-        match mode {
-            Mode::Event => Mode::Record,
-            Mode::Record => Mode::Standby,
-            Mode::Standby => Mode::Event,
-        }
+    fn get_timestamp(&self) -> String {
+        let now = chrono::Local::now();
+        now.format("%Y.%m.%d_%H.%M.%S").to_string()
     }
 
-    pub fn get_target_mode(&self) -> Mode {
-        self.target_mode
-    }
-
-    pub fn set_target_mode(&mut self, mode: Mode) {
-        self.target_mode = mode;
-        self.display.write_mode(mode);
-    }
-
-    pub fn stop_current_mode(&mut self) {
-        if self.target_mode == self.current_mode {
-            return;
+    pub fn start_circular_buffer(&mut self) -> std::io::Result<()> {
+        if self.process.is_some() {
+            return Err(std::io::Error::new(std::io::ErrorKind::AlreadyExists, "camera process is already running"));
         }
 
-        match self.current_mode {
-            Mode::Event => {
-                self.event_mode_stop();
-            }
-            Mode::Record => {
-                self.record_mode_stop();
-            }
-            Mode::Standby => {
-                println!("camera: stopping standby mode");
-                self.state = State::None;
-                self.display.write_state(self.state);
-            }
-        };
+        let output_file = self.events_path.join("tmp_event.h264");
+
+        let child = Command::new("rpicam-vid")
+            .args(["-t", "0", "--inline", "--circular", "120", "-o", output_file.to_str().unwrap()])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()?;
+
+        self.process = Some(child);
+
+        Ok(())
     }
 
-    pub fn start_next_mode(&mut self) {
-        if self.target_mode == self.current_mode {
-            return;
+    pub fn event_trigger(&mut self) -> std::io::Result<()> {
+        let _ = self.stop();
+
+        let tmp_filename = self.events_path.join("tmp_event.h264");
+        if tmp_filename.exists() {
+            let timestamp = self.get_timestamp();
+            let new_filename = format!("event_{}.h264", timestamp);
+            let new_path = self.events_path.join(new_filename);
+            let _ = fs::rename(tmp_filename, new_path);
         }
 
-        match self.target_mode {
-            Mode::Event => {
-                self.event_mode_start();
-            }
-            Mode::Record => {
-                self.record_mode_start();
-            }
-            Mode::Standby => {
-                println!("camera: starting standby mode");
-                self.state = State::None;
-                self.display.write_state(self.state);
-            }
-        };
+        let _ = self.start_circular_buffer();
 
-        self.current_mode = self.target_mode;
+        Ok(())
     }
 
-    pub fn input_handler(&mut self) {
-        match self.current_mode {
-            Mode::Event => {
-                self.event_mode_trigger();
-            }
-            Mode::Record => {
-                if self.state == State::Recording {
-                    self.record_mode_stop();
-                } else {
-                    self.record_mode_start();
-                }
-            }
-            Mode::Standby => {
-                println!("camera: input has no effect in standby mode");
-            }
-        };
+    pub fn start_recording(&mut self) -> std::io::Result<()> {
+        if self.process.is_some() {
+            return Err(std::io::Error::new(std::io::ErrorKind::AlreadyExists, "camera process is already running"));
+        }
+
+        let timestamp = self.get_timestamp();
+        let filename = format!("video_{}.h264", timestamp);
+        let output_file = self.videos_path.join(filename);
+
+        let child = Command::new("rpicam-vid")
+            .args(["-t", "0", "-o", output_file.to_str().unwrap()])
+            .stdout(Stdio::null())
+            .stderr(Stdio::null())
+            .spawn()?;
+
+        self.process = Some(child);
+
+        Ok(())
     }
 
-    pub fn event_mode_start(&mut self) {
-        println!("camera: waiting for event");
-        self.state = State::WaitingForEvent;
-        self.display.write_state(self.state);
-        // TODO: start event recording
-    }
-
-    pub fn event_mode_stop(&mut self) {
-        println!("camera: cleaning up event mode before next mode");
-        // TODO: stop event recording
-        self.state = State::None;
-        self.display.write_state(self.state);
-    }
-
-    pub fn event_mode_trigger(&mut self) {
-        println!("camera: event trigger received");
-        self.state = State::SavingEvent;
-        self.display.write_state(self.state);
-        // TODO: stop recording and save event recording
-
-        // event stored, start recording again
-        self.event_mode_start();
-    }
-
-    pub fn record_mode_start(&mut self) {
-        println!("camera: starting recording");
-        self.state = State::Recording;
-        self.display.write_state(self.state);
-        // TODO: start recording
-    }
-
-    pub fn record_mode_stop(&mut self) {
-        println!("camera: stopping recording");
-        self.state = State::Stopped;
-        self.display.write_state(self.state);
-        // TODO: stop recording
-    }
-
-    pub fn run(&mut self) -> std::io::Result<()> {
-        loop {
-            match self.button.receiver.recv() {
-                Ok(ButtonEvent::ShortPress) => self.input_handler(),
-                Ok(ButtonEvent::Hold) => self.set_target_mode(Camera::get_next_mode(self.get_target_mode())),
-                Ok(ButtonEvent::HoldRelease) => {
-                    self.stop_current_mode();
-                    self.start_next_mode();
-                }
-                Err(_) => break,
-            }
+    pub fn stop(&mut self) -> std::io::Result<()> {
+        if let Some(mut child) = self.process.take() {
+            child.kill()?;
+            child.wait()?;
         }
 
         Ok(())

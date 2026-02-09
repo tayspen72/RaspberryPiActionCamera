@@ -1,4 +1,4 @@
-use crate::camera::{Mode, State};
+use crate::app::{Mode, State};
 use embedded_graphics::{
     mono_font::{MonoTextStyle, ascii::FONT_5X8},
     pixelcolor::BinaryColor,
