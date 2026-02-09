@@ -1,0 +1,11 @@
+[package]
+name = "action_camera"
+version = "1.0.0"
+edition = "2024"
+
+[dependencies]
+gpiod = "0.3.0"
+ssd1306 = "0.7.1"
+linux-embedded-hal = "0.3.2"
+i2cdev = "0.5.1"
+embedded-graphics = "0.7.1"

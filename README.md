@@ -126,6 +126,13 @@ make
 ./bin/action_camera
 ```
 
+#### Phase 3: Rust Implementation
+
+```bash
+cd phase3
+cargo run --release
+```
+
 ## Development Roadmap
 
 ### Planned Enhancements

@@ -1,0 +1,10 @@
+# Rustfmt configuration for compact formatting
+max_width = 140
+array_width = 140
+chain_width = 140
+fn_call_width = 140
+fn_params_layout = "Compressed"
+attr_fn_like_width = 140
+fn_single_line = true
+edition = "2024"
+unstable_features = true
