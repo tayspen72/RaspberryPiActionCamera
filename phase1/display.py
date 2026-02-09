@@ -150,7 +150,7 @@ class Display:
         self._send_command(bytes([_CMD_MEMORY_ADDRESSING, 0x00]))                 # horizontal addressing
         self._send_command(bytes([_CMD_SEGMENT_REMAP + 1]))                       # segment remap (reversed)
         self._send_command(bytes([_CMD_COM_SCAN_DIRECTION + 0x08]))               # COM scan remapped
-        self._send_command(bytes([_CMD_COM_PINS_CONFIG, 0x12]))                   # sequential, no remap
+        self._send_command(bytes([_CMD_COM_PINS_CONFIG, 0x02]))                   # sequential, no remap
         self._send_command(bytes([_CMD_CONTRAST,        0x8F]))                   # contrast
         self._send_command(bytes([_CMD_PRECHARGE_PERIOD, 0x22]))                  # precharge phase1=2 phase2=2
         self._send_command(bytes([_CMD_VCOM_DESELECT,   0x20]))                   # VCOM level 0.77
